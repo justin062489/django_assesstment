@@ -60,6 +60,9 @@ class Ride(models.Model):
     pickup_time = models.DateTimeField()
     objects = RideManager()
 
+    class Meta:
+        ordering = ["status"]
+
     def __str__(self):
         return f"Ride {self.id_ride} - {self.status}"
 

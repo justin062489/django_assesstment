@@ -63,4 +63,4 @@ class RideManager(models.Manager):
                 queryset=today_events_queryset,
                 to_attr="today_ride_events",
             )
-        )
+        ).order_by("pickup_time")
