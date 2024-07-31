@@ -4,7 +4,6 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db import models
 from django.db.models import Prefetch
-from .models import RideEvent
 
 
 class CustomUserManager(BaseUserManager):
@@ -52,6 +51,8 @@ class CustomUserManager(BaseUserManager):
 
 class RideManager(models.Manager):
     def today_ride_events(self):
+        from .models import RideEvent
+
         now = timezone.now()
         last_24_hours = now - timedelta(hours=24)
         today_events_queryset = RideEvent.objects.filter(created_at__gte=last_24_hours)
