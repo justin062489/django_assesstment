@@ -1,4 +1,10 @@
 from django.contrib.auth.models import BaseUserManager
+from django.db import models
+from datetime import timedelta
+from django.utils import timezone
+from django.db import models
+from django.db.models import Prefetch
+from .models import RideEvent
 
 
 class CustomUserManager(BaseUserManager):
@@ -42,3 +48,18 @@ class CustomUserManager(BaseUserManager):
         user.is_superuser = True
         user.save(using=self._db)
         return user
+
+
+class RideManager(models.Manager):
+    def today_ride_events(self):
+        now = timezone.now()
+        last_24_hours = now - timedelta(hours=24)
+        today_events_queryset = RideEvent.objects.filter(created_at__gte=last_24_hours)
+
+        return self.prefetch_related(
+            Prefetch(
+                "ride_events",
+                queryset=today_events_queryset,
+                to_attr="today_ride_events",
+            )
+        )

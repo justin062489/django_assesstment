@@ -7,7 +7,7 @@ from django.contrib.auth.models import (
     AbstractBaseUser,
     PermissionsMixin,
 )
-from .managers import CustomUserManager
+from .managers import CustomUserManager, RideManager
 
 
 # Create your models here.
@@ -58,6 +58,7 @@ class Ride(models.Model):
     dropoff_latitude = models.FloatField()
     dropoff_longitude = models.FloatField()
     pickup_time = models.DateTimeField()
+    objects = RideManager()
 
     def __str__(self):
         return f"Ride {self.id_ride} - {self.status}"
