@@ -12,7 +12,7 @@ from .permissions import AdminOnly
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.exclude(role="admin")
     serializer_class = CustomUserSerializer
     permission_classes = [AdminOnly]
 

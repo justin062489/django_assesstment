@@ -6,6 +6,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
+            "id_user",
             "email",
             "password",
             "first_name",
@@ -13,8 +14,10 @@ class CustomUserSerializer(serializers.ModelSerializer):
             "phone_number",
             "role",
         ]
-        read_only_fields = ("is_active", "is_staff")
-        extra_kwargs = {"password": {"write_only": True}, "role": {"write_only": True}}
+        read_only_fields = ("is_active", "is_staff", "id_user")
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
 
 class RideEventSerializer(serializers.ModelSerializer):
