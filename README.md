@@ -1,13 +1,13 @@
 
 Steps on how to setup and use the application.
-1. In the project folder directory, and run command pip install -r requirements.txt
-2. run command python manage.py and python manage.py migrate
-3. create a superuser, run command python manage.py createsuperuser
+1. In the project folder directory, run command pip install -r requirements.txt
+2. run command python manage.py makemigrations and python manage.py migrate
+3. to create a superuser, run command python manage.py createsuperuser
 4. You may access the admin page in Localhost-URL/admin ex. localhost:8000/admin. You can create Users, Ride, RideEvents
 5. You can access the API Documentation or Swagger at this URL /swagger. ex. localhost:8000/swagger
-6. To obtain token please find /token and fill out necessary fields. 
+6. To obtain token please find path /token and fill out necessary fields. 
 7. To use the authorization of swagger please use the "Authorize" button and Type Bearer + access_token. ex: Bearer 830921hdjksadh20387193821dsjkla
-8. To access the ride list please find /rides , you can use the sorting by GPS Position by inputting lattitude and longitude.
+8. To access the ride list please find path /rides , you can use the sorting by GPS Position by inputting lattitude and longitude.
 
 
 Bonus SQL
