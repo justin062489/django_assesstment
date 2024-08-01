@@ -8,15 +8,18 @@ from .utils import paginator, calculate_and_sort_by_distance
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from .permissions import AdminOnly
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = CustomUserSerializer
+    permission_classes = [AdminOnly]
 
 
 class RideViewSet(viewsets.ModelViewSet):
     serializer_class = RideSerializer
+    permission_classes = [AdminOnly]
 
     def get_queryset(self):
         if self.action == "list":
