@@ -15,7 +15,6 @@ Bonus SQL
 Note(in ride events please type in the description. and use 'Status changed to pickup' for pickup and 'Status changed to dropoff'  for dropoff status.)
 
 with connection.cursor() as cursor:
-
     cursor.execute(
         """
     WITH RideTimes AS (
