@@ -65,8 +65,8 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
     # Create sample rides
     Ride.objects.create(
         status="en-route",
-        pickup_latitude=14.684959,
-        pickup_longitude=121.031774,
+        pickup_latitude=14.624541,
+        pickup_longitude=121.130679,
         dropoff_latitude=14.684959,
         dropoff_longitude=14.684959,
         pickup_time="2024-08-01T03:25:10Z",
@@ -142,7 +142,7 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
         return sorted_data
 
     # Initial URL and coordinates
-    latitude, longitude = 14.695, 121.025
+    latitude, longitude = 14.624458, 121.136387
     url = reverse("ride-list")
     page_data = get_page_data(
         url,
