@@ -1,3 +1,7 @@
+To run test for the sort_by_distance:
+1. pip install -r requirements.txt (pytest-django)
+2. run pytest
+
 
 Steps on how to setup and use the application.
 1. In the project folder directory, run command pip install -r requirements.txt
