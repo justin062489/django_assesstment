@@ -94,8 +94,10 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
         id_driver=create_driver,
     )
 
-    def get_page_data(url, latitude, longitude):
-        response = client.get(url, {"latitude": latitude, "longitude": longitude})
+    def get_page_data(url, latitude, longitude, per_page):
+        response = client.get(
+            url, {"latitude": latitude, "longitude": longitude, "per_page": per_page}
+        )
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
@@ -132,7 +134,7 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
 
         # Check pagination
         per_page = int(page_data.get("per_page", 1))
-        page_number = int(page_data.get("page", 1))
+        page_number = int(page_data.get("page"))
 
         start_index = (page_number - 1) * per_page
         end_index = start_index + per_page
@@ -143,12 +145,9 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
 
     # Initial URL and coordinates
     latitude, longitude = 14.624458, 121.136387
+    per_page = 1
     url = reverse("ride-list")
-    page_data = get_page_data(
-        url,
-        latitude,
-        longitude,
-    )
+    page_data = get_page_data(url, latitude, longitude, per_page)
     check_page_data(page_data, latitude, longitude)
 
     # Check all subsequent pages
