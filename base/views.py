@@ -1,6 +1,11 @@
 from rest_framework import viewsets
 from .models import User, Ride, RideEvent
-from .serializers import CustomUserSerializer, RideSerializer, RideEventSerializer
+from .serializers import (
+    CustomUserSerializer,
+    RideSerializer,
+    RideEventSerializer,
+    RideListSerializer,
+)
 from .utils import paginator, calculate_and_sort_by_distance
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
@@ -24,6 +29,12 @@ class RideViewSet(viewsets.ModelViewSet):
             return Ride.objects.today_ride_events()
         else:
             return Ride.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return RideListSerializer
+        else:
+            return RideSerializer
 
     @swagger_auto_schema(
         manual_parameters=[
@@ -68,8 +79,8 @@ class RideViewSet(viewsets.ModelViewSet):
     )
     def list(self, request, *args, **kwargs):
         queryset = self.get_filtered_queryset(request)
-        paginated_data = self.get_paginated_data(queryset, request)
-        paginated_data = self.sort_by_distance(paginated_data, request)
+        sorted_queryset = self.sort_by_distance(queryset, request)
+        paginated_data = self.get_paginated_data(sorted_queryset, request)
         return Response(paginated_data)
 
     def get_filtered_queryset(self, request):
@@ -85,7 +96,7 @@ class RideViewSet(viewsets.ModelViewSet):
 
     def get_paginated_data(self, queryset, request):
         per_page = int(request.GET.get("per_page", 100))
-        serializer = self.get_serializer
+        serializer = RideListSerializer
         return paginator(
             per_page=per_page,
             data=queryset,
@@ -93,21 +104,22 @@ class RideViewSet(viewsets.ModelViewSet):
             request=request,
         )
 
-    def sort_by_distance(self, paginated_data, request):
+    def sort_by_distance(self, queryset, request):
         input_latitude = request.GET.get("latitude")
         input_longitude = request.GET.get("longitude")
+
         if not input_latitude or not input_longitude:
-            return paginated_data
+            return queryset  # Return unsorted queryset if no location provided
 
         try:
             latitude = float(input_latitude)
             longitude = float(input_longitude)
         except ValueError:
-            # Handle invalid latitude/longitude here if needed
-            return paginated_data
+            return queryset
 
-        return calculate_and_sort_by_distance(
-            paginated_data=paginated_data,
+        sorted_queryset = calculate_and_sort_by_distance(
+            queryset=queryset,
             latitude=latitude,
             longitude=longitude,
         )
+        return sorted_queryset

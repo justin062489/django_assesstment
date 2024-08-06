@@ -32,3 +32,19 @@ class RideSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ride
         fields = "__all__"
+
+
+class RideListSerializer(serializers.Serializer):
+    id_ride = serializers.IntegerField()
+    status = serializers.CharField()
+    today_ride_events = RideEventSerializer(many=True, read_only=True)
+    pickup_latitude = serializers.FloatField()
+    pickup_longitude = serializers.FloatField()
+    dropoff_latitude = serializers.FloatField()
+    dropoff_longitude = serializers.FloatField()
+    pickup_time = serializers.DateTimeField()
+    # Writable fields for input
+    id_rider_id = serializers.PrimaryKeyRelatedField(source="id_rider", read_only=True)
+    id_driver_id = serializers.PrimaryKeyRelatedField(
+        source="id_driver", read_only=True
+    )

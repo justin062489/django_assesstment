@@ -1,6 +1,7 @@
 from rest_framework.pagination import PageNumberPagination
 from haversine import haversine
 from typing import List, Dict, Optional
+from django.forms.models import model_to_dict
 
 
 def paginator(
@@ -9,6 +10,7 @@ def paginator(
     paginator = PageNumberPagination()
     paginator.page_size = per_page
     paginated_data = paginator.paginate_queryset(data, request)
+    print(paginated_data, "from paginated data")
     serializer = serializer(paginated_data, many=True)
     response_data = {
         "count": paginator.page.paginator.count,
@@ -22,14 +24,16 @@ def paginator(
 
 
 def calculate_and_sort_by_distance(
-    paginated_data: List[Dict],
+    queryset: List[Dict],
     latitude: float,
     longitude: float,
 ) -> List[Dict]:
 
-    for item in paginated_data["data"]:
+    converted_queryset = ride_data_to_list(queryset)
+
+    for item in converted_queryset:
         try:
-            ## Add key distance and integrate value
+            # Calculate distance and add it to the item
             item["distance"] = haversine(
                 (latitude, longitude),
                 (item["pickup_latitude"], item["pickup_longitude"]),
@@ -38,9 +42,35 @@ def calculate_and_sort_by_distance(
             print(f"Error calculating distance for item {item}: {e}")
             item["distance"] = None
 
-    ## Sort Data by the added distance value
-    ## float(inf) incase there if distance key is none.
-    paginated_data["data"] = sorted(
-        paginated_data["data"], key=lambda x: x.get("distance", float("inf"))
+    # Sort the new list by the distance
+    converted_queryset = sorted(
+        converted_queryset, key=lambda x: x.get("distance", float("inf"))
     )
-    return paginated_data
+
+    return converted_queryset
+
+
+def ride_data_to_list(queryset: List[object]):
+    converted_queryset = []
+    for ride in queryset:
+        kwargs = {
+            "id_ride": ride.id_ride,
+            "status": ride.status,
+            "pickup_latitude": ride.pickup_latitude,
+            "pickup_longitude": ride.pickup_longitude,
+            "dropoff_latitude": ride.dropoff_latitude,
+            "dropoff_longitude": ride.dropoff_longitude,
+            "pickup_time": ride.pickup_time,
+            "today_ride_events": [
+                {
+                    "id_ride_event": event.id_ride_event,
+                    "description": event.description,
+                    "created_at": event.created_at,
+                    "id_ride": event.id_ride,
+                }
+                for event in ride.today_ride_events
+            ],
+        }
+        converted_queryset.append(kwargs)
+
+    return converted_queryset
