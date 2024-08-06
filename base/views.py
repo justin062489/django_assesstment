@@ -96,7 +96,7 @@ class RideViewSet(viewsets.ModelViewSet):
 
     def get_paginated_data(self, queryset, request):
         per_page = int(request.GET.get("per_page", 100))
-        serializer = RideListSerializer
+        serializer = self.get_serializer_class()
         return paginator(
             per_page=per_page,
             data=queryset,

@@ -2,6 +2,7 @@ from rest_framework.pagination import PageNumberPagination
 from haversine import haversine
 from typing import List, Dict, Optional
 from django.forms.models import model_to_dict
+from django.db.models import Model
 
 
 def paginator(
@@ -10,7 +11,7 @@ def paginator(
     paginator = PageNumberPagination()
     paginator.page_size = per_page
     paginated_data = paginator.paginate_queryset(data, request)
-    print(paginated_data, "from paginated data")
+
     serializer = serializer(paginated_data, many=True)
     response_data = {
         "count": paginator.page.paginator.count,
@@ -18,6 +19,7 @@ def paginator(
         "next_page": paginator.get_next_link(),
         "previous_page": paginator.get_previous_link(),
         "total_pages": paginator.page.paginator.num_pages,
+        "page": paginator.page.number,
         "data": serializer.data,
     }
     return response_data
@@ -27,9 +29,10 @@ def calculate_and_sort_by_distance(
     queryset: List[Dict],
     latitude: float,
     longitude: float,
+    is_for_test: bool = False,
 ) -> List[Dict]:
 
-    converted_queryset = ride_data_to_list(queryset)
+    converted_queryset = ride_data_to_list(queryset) if not is_for_test else queryset
 
     for item in converted_queryset:
         try:
@@ -50,10 +53,14 @@ def calculate_and_sort_by_distance(
     return converted_queryset
 
 
-def ride_data_to_list(queryset: List[object]):
+def ride_data_to_list(queryset: List[Model]) -> List[Dict]:
     converted_queryset = []
+
     for ride in queryset:
-        kwargs = {
+
+        # Create a dictionary with the ride fields
+
+        ride_data = {
             "id_ride": ride.id_ride,
             "status": ride.status,
             "pickup_latitude": ride.pickup_latitude,
@@ -68,9 +75,10 @@ def ride_data_to_list(queryset: List[object]):
                     "created_at": event.created_at,
                     "id_ride": event.id_ride,
                 }
-                for event in ride.today_ride_events
+                for event in ride.today_ride_events  # Ensure .all() is used if it's a queryset
             ],
         }
-        converted_queryset.append(kwargs)
+
+        converted_queryset.append(ride_data)
 
     return converted_queryset

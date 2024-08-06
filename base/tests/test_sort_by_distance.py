@@ -20,7 +20,6 @@ def create_admin():
 
 @pytest.fixture
 def create_driver():
-
     driver_default_kwargs = {
         "password": "password1234",
         "first_name": "drivertest_firstname",
@@ -36,7 +35,6 @@ def create_driver():
 
 @pytest.fixture
 def create_rider():
-
     rider_default_kwargs = {
         "password": "password1234",
         "first_name": "ridertest_firstname",
@@ -64,6 +62,7 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
 
     client.credentials(HTTP_AUTHORIZATION="Bearer " + access_token)
 
+    # Create sample rides
     Ride.objects.create(
         status="en-route",
         pickup_latitude=14.684959,
@@ -84,7 +83,6 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
         id_rider=create_rider,
         id_driver=create_driver,
     )
-
     Ride.objects.create(
         status="pickup",
         pickup_latitude=14.710000,
@@ -96,55 +94,71 @@ def test_sorted_by_distance_pagination(create_admin, create_driver, create_rider
         id_driver=create_driver,
     )
 
-    # Request the API endpoint
-    url = reverse("ride-list")
-    response = client.get(url, {"latitude": 14.695, "longitude": 121.025})
+    def get_page_data(url, latitude, longitude):
+        response = client.get(url, {"latitude": latitude, "longitude": longitude})
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
 
-    assert response.status_code == status.HTTP_200_OK
+        assert "count" in data
+        assert "per_page" in data
+        assert "next_page" in data
+        assert "previous_page" in data
+        assert "total_pages" in data
+        assert "data" in data
+        assert "page" in data
 
-    data = response.json()
+        return data
 
-    # Verify pagination metadata
-    assert "count" in data
-    assert "per_page" in data
-    assert "next_page" in data
-    assert "previous_page" in data
-    assert "total_pages" in data
-    assert "data" in data
+    def check_page_data(page_data, latitude, longitude):
+        rides_data = page_data["data"]  # Use "data" for paginated data
 
-    def check_page_data(page_data, page_num):
+        # Calculate and sort the data, use is_for_test if data is list of dictionary
         sorted_data = calculate_and_sort_by_distance(
-            page_data["data"], latitude=14.695, longitude=121.025
+            rides_data, latitude=latitude, longitude=longitude, is_for_test=True
         )
 
-        assert len(sorted_data) == len(page_data["data"])
-
+        # Check sorting
         distances = [item.get("distance") for item in sorted_data]
         assert distances == sorted(
             distances, key=lambda x: x if x is not None else float("inf")
         )
 
-        for item in page_data["data"]:
+        # Verify that each item has the correct fields
+        for item in rides_data:
             assert "id_ride" in item
             assert "status" in item
             assert "pickup_latitude" in item
             assert "pickup_longitude" in item
 
+        # Check pagination
+        per_page = int(page_data.get("per_page", 1))
+        page_number = int(page_data.get("page", 1))
+
+        start_index = (page_number - 1) * per_page
+        end_index = start_index + per_page
+
+        assert rides_data == sorted_data[start_index:end_index]
+
         return sorted_data
 
-    sorted_data = check_page_data(data, page_num=1)
+    # Initial URL and coordinates
+    latitude, longitude = 14.695, 121.025
+    url = reverse("ride-list")
+    page_data = get_page_data(
+        url,
+        latitude,
+        longitude,
+    )
+    check_page_data(page_data, latitude, longitude)
 
-    # Check the next pages if they exist
-    next_page_url = data.get("next_page")
+    # Check all subsequent pages
+    next_page_url = page_data.get("next_page")  # Use "next_page" for the next page URL
     while next_page_url:
-        response_next = client.get(next_page_url)
-        assert response_next.status_code == status.HTTP_200_OK
-        data_next = response_next.json()
-
-        # Verify next page data
-        sorted_data_next = check_page_data(
-            data_next, page_num=len(sorted_data) // int(data["per_page"]) + 1
+        response = client.get(
+            next_page_url, {"latitude": latitude, "longitude": longitude}
         )
-
-        # Update the URL for the next page
-        next_page_url = data_next.get("next_page")
+        response_next_data = response.json()
+        check_page_data(response_next_data, latitude, longitude)
+        next_page_url = response_next_data.get(
+            "next_page"
+        )  # Use "next_page" for the next page URL
